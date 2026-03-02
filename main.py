@@ -50,6 +50,11 @@ async def root():
 
 @app.post("/entries", response_model=EntryResponse, status_code=201)
 async def create_entry(body: EntryCreate):
+    if body.event_date > date.today():
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot post to a future date — messages only flow backward in time.",
+        )
     row = await db.create_entry(
         content=body.content,
         author=body.author,

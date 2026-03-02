@@ -384,16 +384,15 @@
       <h3>How it works</h3>
       <div style="font-size:0.8rem;color:var(--muted);line-height:1.7;">
         <div style="margin-bottom:6px;">
-          <span style="color:var(--past);">●</span> <strong style="color:var(--text);">From the past</strong><br/>
-          Written before this date arrived.
-        </div>
-        <div style="margin-bottom:6px;">
           <span style="color:var(--present);">●</span> <strong style="color:var(--text);">On this day</strong><br/>
-          Written on the same day.
+          Written on the same day. You're here, in real time.
         </div>
         <div>
           <span style="color:var(--future);">●</span> <strong style="color:var(--text);">From the future</strong><br/>
-          Written after this date passed.
+          Written after this date passed. You carry the outcome.
+        </div>
+        <div style="margin-top:10px;font-size:0.75rem;color:var(--muted);">
+          Messages only flow backward — you can only write to today or earlier.
         </div>
       </div>
     </div>
@@ -445,14 +444,13 @@
   }
 
   function getTimeTravelClass(writtenAt, forDate) {
+    // Messages only flow backward: written_at is always >= for_date
     const wd = (writtenAt + '').slice(0, 10);
-    if (wd < forDate) return 'past';
     if (wd > forDate) return 'future';
     return 'present';
   }
 
   function getTimeTravelBadge(cls) {
-    if (cls === 'past')    return '🕰️ from the past';
     if (cls === 'future')  return '✨ from the future';
     return '📅 on this day';
   }

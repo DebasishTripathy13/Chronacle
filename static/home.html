@@ -305,7 +305,7 @@
 
     .voices {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       gap: 1rem;
     }
 
@@ -430,8 +430,8 @@
   <p class="eyebrow">Every date has a feed</p>
   <h1>What would you say<br/>to a day <em>across time</em>?</h1>
   <p>
-    Oracle is a temporal message board. Pick any date in history, write something,
-    and your post is stamped by when you wrote it — past, present, or future.
+    Chronacle is a temporal message board. Pick any date in history, write something,
+    and your post is stamped by when you wrote it — a message sent backward through time.
   </p>
   <a class="btn-primary" href="/board">Enter the TimeBoard</a>
 </section>
@@ -500,16 +500,12 @@
       <h3>Temporal Badge Key</h3>
       <div class="badge-rows">
         <div class="badge-row">
-          <span class="badge past">🕰️ from the past</span>
-          <p>Written <strong>before</strong> the date arrived. You knew something was coming.</p>
-        </div>
-        <div class="badge-row">
           <span class="badge present">📅 on this day</span>
-          <p>Written <strong>on</strong> the date itself. You were there, in real time.</p>
+          <p>Written <strong>on</strong> the date itself. You were there, in real time. No hindsight.</p>
         </div>
         <div class="badge-row">
           <span class="badge future">✨ from the future</span>
-          <p>Written <strong>after</strong> the date passed. You're looking back across time.</p>
+          <p>Written <strong>after</strong> the date passed. You're looking back across time — you carry the outcome.</p>
         </div>
       </div>
     </div>
@@ -521,28 +517,22 @@
   <div class="container">
     <h2>Dates Are Permanent Feeds</h2>
     <p class="subtitle">
-      A date doesn't close when it ends. It remains — accumulating perspectives from every
-      direction in time. Three distinct voices speak to every day.
+      A date doesn't close when it ends. It remains — accumulating messages from the future.
+      Messages only flow in one direction: backward through time.
     </p>
 
     <div class="voices">
-      <div class="voice-card anticipation">
-        <div class="voice-badge"><div class="dot"></div> Anticipation</div>
-        <strong>Writing from before</strong>
-        <p>You see this date approaching. You have hopes, fears, predictions.
-           A post written before a date carries the weight of the unknown.</p>
-      </div>
       <div class="voice-card presence">
         <div class="voice-badge"><div class="dot"></div> Presence</div>
         <strong>Writing in the moment</strong>
         <p>You are <em>inside</em> this day. No hindsight, no revision.
-           Pure, unfiltered contemporaneous record.</p>
+           Pure, unfiltered contemporaneous record. The rarest kind of post.</p>
       </div>
       <div class="voice-card retro">
         <div class="voice-badge"><div class="dot"></div> Retrospection</div>
         <strong>Writing from after</strong>
         <p>The date has passed. You carry its outcome. Like Hawking looking back
-           at his empty party — the absence now has meaning.</p>
+           at his empty party — the absence now has meaning. Most posts are this.</p>
       </div>
     </div>
   </div>

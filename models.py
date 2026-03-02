@@ -15,6 +15,8 @@ class EntryCreate(BaseModel):
             return date.today()
         if isinstance(v, str):
             v = date.fromisoformat(v)
+        if v > date.today():
+            raise ValueError("Cannot post to a future date — messages only flow backward in time.")
         return v
 
 
