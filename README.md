@@ -21,11 +21,88 @@
 
 **Chronacle** is a temporal message board — a place where every date in human history has its own permanent, public feed. You pick a date, write a message, and the system stamps it with *when* you actually wrote it. The gap between the date you're writing *to* and the moment you write *from* becomes the message itself.
 
-- Want to annotate the day you were born? You'll be writing **from the future**.
-- Journaling about today? You're writing **in the present**.
-- Predicting what tomorrow will bring? You're writing **from the past** — before tomorrow arrives.
-
 A date never closes. It stays open forever, accumulating perspectives from people writing across different moments in time. The result is a layered, temporal record — part diary, part time capsule, part collective memory.
+
+### The Core Mechanic — d1 / d2 / d3
+
+Imagine three dates on a timeline:
+
+```
+  d1 (past)              d2 (present)              d3 (future)
+    │                        │                        │
+────●────────────────────────●────────────────────────●────▶ time
+```
+
+**You are always standing at one point in time, writing to another.** That relationship is what Chronacle captures.
+
+#### Writing at d2, targeting d1 (writing to the past)
+
+You're standing at **d2** (the present). You choose to write to **d1** — a date that has already passed. From d1's perspective, your message arrived *from the future*. You might be reflecting on what happened between d1 and d2 — something that d1 didn't know yet, but you do now.
+
+```
+  d1 (target)            d2 (you are here)
+    │                        │
+────●───── the gap ──────────●────▶
+    │                        │
+    │◀── your post lands ────┘
+    │     on d1's feed
+    │     badge: ✨ from the future
+```
+
+The post shows up on **d1's feed**, stamped with d2's timestamp. Anyone browsing d1 sees your message and knows: *this person wrote after this date. They knew the outcome.*
+
+#### Writing at d2, targeting d2 (writing in the present)
+
+You're at **d2** and you write about **d2 itself**. No time gap. You're recording what's happening right now — no hindsight, no foresight. Raw, unfiltered presence.
+
+```
+                         d2 (you + target)
+                             │
+─────────────────────────────●────▶
+                             │
+                             │ badge: 📅 on this day
+```
+
+#### Writing at d3, targeting d2 (the future writes back)
+
+Now imagine someone at **d3** — further in the future — writes to **d2**. From d2's perspective, a message just appeared from someone who hasn't "arrived" yet. They know things that happened between d2 and d3.
+
+```
+                  d2 (target)             d3 (writer)
+                      │                      │
+──────────────────────●───── the gap ─────────●────▶
+                      │                       │
+                      │◀── post lands here ───┘
+                      │     badge: ✨ from the future
+```
+
+The same logic chains infinitely: **every date can receive messages from any point after it** — each one carrying knowledge that the date itself didn't have. And every date can receive messages from *before* it — predictions, hopes, fears from people who didn't yet know the outcome.
+
+#### The full chain
+
+```
+  d1              d2              d3
+   │               │               │
+───●───────────────●───────────────●───▶ time
+   │               │               │
+   │◀── d2 writes ─┘               │
+   │    to d1                      │
+   │    (retrospection)            │
+   │                               │
+   │               │◀── d3 writes ─┘
+   │               │    to d2
+   │               │    (retrospection)
+   │               │
+   ├── d1 writes ──▶               │
+   │   to d2                       │
+   │   (anticipation)              │
+   │                               │
+   │               ├── d2 writes ──▶
+   │               │   to d3
+   │               │   (anticipation)
+```
+
+**Every pair of dates has a directional relationship.** The writer's position in time relative to the target date determines the temporal voice. This is the heartbeat of Chronacle.
 
 ---
 
@@ -61,13 +138,25 @@ The infrastructure exists now. If a time traveler ever wants to post a message t
 
 ## Three Temporal Voices
 
-Every post on Chronacle is automatically classified into one of three temporal perspectives, based on when it was written relative to the date it targets:
+Every post on Chronacle is automatically classified into one of three temporal perspectives. The system compares two timestamps — `written_at` (when you wrote) and `for_date` (the date you targeted) — and assigns a voice:
 
-| Badge | Voice | Meaning |
-|---|---|---|
-| 🕰️ **From the Past** | Anticipation | Written *before* the date arrived. You see it coming — hopes, fears, predictions. The weight of the unknown. |
-| 📅 **On This Day** | Presence | Written *on* the date itself. No hindsight, no foresight. A pure, unfiltered contemporaneous record. |
-| ✨ **From the Future** | Retrospection | Written *after* the date passed. You carry its outcome. Like Hawking looking back at his empty party — the absence now has meaning. |
+| Badge | Voice | Condition | What it means |
+|---|---|---|---|
+| 🕰️ **From the Past** | Anticipation | `written_at` < `for_date` | You wrote *before* this date arrived. You didn't know what would happen. Your post carries prediction, hope, fear — the weight of the unknown. |
+| 📅 **On This Day** | Presence | `written_at` = `for_date` | You wrote *on* the date itself. No hindsight, no foresight. A pure, unfiltered, contemporaneous record. |
+| ✨ **From the Future** | Retrospection | `written_at` > `for_date` | You wrote *after* this date passed. You carry its outcome. Like Hawking looking back at his empty party — the absence now has meaning. |
+
+### Example across a three-date chain
+
+| Writer is at | Writes to | Badge on target's feed | Why |
+|---|---|---|---|
+| **d2** (Mar 2) | **d1** (Jan 15) | ✨ from the future | d2 is after d1 — writer has hindsight |
+| **d2** (Mar 2) | **d2** (Mar 2) | 📅 on this day | Same date — real-time witness |
+| **d1** (Jan 15) | **d2** (Mar 2) | 🕰️ from the past | d1 is before d2 — writer is predicting |
+| **d3** (Dec 25) | **d2** (Mar 2) | ✨ from the future | d3 is after d2 — writer knows what happened |
+| **d2** (Mar 2) | **d3** (Dec 25) | 🕰️ from the past | d2 is before d3 — writer is anticipating |
+
+The badge doesn't just label the post — it tells you **what the writer knew** at the moment they wrote. That's the real information.
 
 ---
 
