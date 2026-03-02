@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chronacle — TimeBoard</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #08080f;
+      --surface:  #111118;
+      --border:   #1e1e2e;
+      --text:     #e2e2e8;
+      --muted:    #52526a;
+      --past:     #3b82f6;
+      --present:  #22c55e;
+      --future:   #a855f7;
+      --accent:   #7c3aed;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .logo {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--future);
+      letter-spacing: -0.5px;
+    }
+
+    .logo span { color: var(--muted); font-weight: 400; font-size: 0.9rem; margin-left: 8px; }
+
+    .date-nav {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .date-nav button {
+      background: var(--border);
+      border: none;
+      color: var(--text);
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background 0.15s;
+    }
+
+    .date-nav button:hover { background: #2a2a3e; }
+    .date-nav button:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    #dateDisplay {
+      font-size: 0.95rem;
+      font-weight: 600;
+      min-width: 160px;
+      text-align: center;
+    }
+
+    .btn-today {
+      background: var(--border) !important;
+      border: 1px solid #2a2a3e !important;
+      color: var(--muted) !important;
+      padding: 0 12px !important;
+      width: auto !important;
+      font-size: 0.78rem !important;
+    }
+
+    .live-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.78rem;
+      color: var(--present);
+      background: #052e16;
+      border: 1px solid #166534;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+
+    .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--present);
+      animation: pulse 1.4s infinite;
+    }
+
+    @keyframes pulse {
+      0%,100% { opacity: 1; }
+      50%      { opacity: 0.2; }
+    }
+
+    /* ── Layout ── */
+    .layout {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      max-width: 1100px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 2rem;
+      gap: 2rem;
+      flex: 1;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar { display: flex; flex-direction: column; gap: 1.5rem; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.4rem;
+    }
+
+    .card h3 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+      margin-top: 10px;
+    }
+
+    label:first-of-type { margin-top: 0; }
+
+    input[type="text"], textarea {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      padding: 8px 12px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus, textarea:focus {
+      border-color: var(--accent);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 90px;
+    }
+
+    .post-btn {
+      margin-top: 1rem;
+      width: 100%;
+      padding: 10px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .post-btn:hover { opacity: 0.85; }
+    .post-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .flash {
+      margin-top: 0.6rem;
+      font-size: 0.78rem;
+      padding: 6px 10px;
+      border-radius: 6px;
+      display: none;
+    }
+
+    .flash.ok  { display: block; background: #052e16; color: #4ade80; border: 1px solid #166534; }
+    .flash.err { display: block; background: #2d0a0a; color: #f87171; border: 1px solid #7f1d1d; }
+
+    /* active dates */
+    .date-list { display: flex; flex-direction: column; gap: 4px; }
+
+    .date-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      color: var(--muted);
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .date-item:hover { background: var(--border); color: var(--text); }
+    .date-item.active { background: #1e1030; color: var(--future); }
+
+    .date-item .count {
+      background: var(--border);
+      color: var(--muted);
+      font-size: 0.7rem;
+      padding: 1px 7px;
+      border-radius: 10px;
+    }
+
+    /* ── Feed ── */
+    .feed-col { display: flex; flex-direction: column; gap: 1rem; }
+
+    .feed-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .feed-header h2 { font-size: 1.1rem; font-weight: 700; }
+    .feed-header .count { font-size: 0.85rem; color: var(--muted); }
+
+    /* Legend */
+    .legend {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .legend-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+    }
+
+    /* Post cards */
+    .post-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.2rem 1.4rem;
+      border-left: 3px solid var(--border);
+      animation: fadeUp 0.25s ease;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .post-card.past    { border-left-color: var(--past); }
+    .post-card.present { border-left-color: var(--present); }
+    .post-card.future  { border-left-color: var(--future); }
+
+    .post-content {
+      font-size: 1rem;
+      line-height: 1.6;
+      margin-bottom: 0.8rem;
+      word-break: break-word;
+    }
+
+    .post-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .post-author {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .post-time { font-size: 0.78rem; color: var(--muted); }
+
+    .badge {
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+    }
+
+    .badge.past    { background: #1e3a5f; color: var(--past); }
+    .badge.present { background: #052e16; color: var(--present); }
+    .badge.future  { background: #2e1065; color: var(--future); }
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .empty-state .big { font-size: 2.5rem; margin-bottom: 0.5rem; }
+
+    .skeleton {
+      background: linear-gradient(90deg, var(--border) 25%, #1a1a2e 50%, var(--border) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.2s infinite;
+      border-radius: 8px;
+      height: 14px;
+      margin-bottom: 8px;
+    }
+
+    @keyframes shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    @media (max-width: 700px) {
+      .layout { grid-template-columns: 1fr; padding: 1rem; }
+      header  { padding: 0 1rem; }
+      .logo span { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Chronacle <span>TimeBoard</span></div>
+  <div class="date-nav">
+    <button onclick="shiftDate(-1)">&#8592;</button>
+    <span id="dateDisplay">—</span>
+    <button onclick="shiftDate(+1)">&#8594;</button>
+    <button class="date-nav button btn-today" onclick="goToday()">Today</button>
+  </div>
+  <div class="live-badge"><div class="dot"></div> Live</div>
+</header>
+
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+
+    <div class="card">
+      <h3>Post to this day</h3>
+      <label>Your name</label>
+      <input type="text" id="author" placeholder="anon" maxlength="40"/>
+      <label>Message</label>
+      <textarea id="content" placeholder="Write something about this day…" maxlength="500"></textarea>
+      <div id="charCount" style="font-size:0.72rem;color:var(--muted);text-align:right;margin-top:4px;">0 / 500</div>
+      <button class="post-btn" id="postBtn" onclick="submitPost()">Post</button>
+      <div class="flash" id="flash"></div>
+    </div>
+
+    <div class="card">
+      <h3>Active dates</h3>
+      <div class="date-list" id="dateList">
+        <div class="date-item" style="color:var(--muted);font-size:0.82rem;">Loading…</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>How it works</h3>
+      <div style="font-size:0.8rem;color:var(--muted);line-height:1.7;">
+        <div style="margin-bottom:6px;">
+          <span style="color:var(--past);">●</span> <strong style="color:var(--text);">From the past</strong><br/>
+          Written before this date arrived.
+        </div>
+        <div style="margin-bottom:6px;">
+          <span style="color:var(--present);">●</span> <strong style="color:var(--text);">On this day</strong><br/>
+          Written on the same day.
+        </div>
+        <div>
+          <span style="color:var(--future);">●</span> <strong style="color:var(--text);">From the future</strong><br/>
+          Written after this date passed.
+        </div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- Feed -->
+  <main class="feed-col">
+    <div class="feed-header">
+      <h2 id="feedTitle">—</h2>
+      <span class="count" id="feedCount"></span>
+    </div>
+
+    <div id="feed">
+      <div class="post-card">
+        <div class="skeleton" style="width:80%"></div>
+        <div class="skeleton" style="width:60%"></div>
+        <div class="skeleton" style="width:40%"></div>
+      </div>
+    </div>
+  </main>
+
+</div>
+
+<script>
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  function today() {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${dd}`;
+  }
+
+  function fmtDate(iso) {
+    const [y, m, d] = iso.split('-');
+    return `${MONTHS[+m-1]} ${+d}, ${y}`;
+  }
+
+  function fmtWritten(isoStr) {
+    const d = new Date(isoStr + 'Z');
+    const now = new Date();
+    const diff = Math.floor((now - d) / 1000);
+    if (diff < 60)  return 'just now';
+    if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+    return fmtDate(isoStr.split('T')[0].split(' ')[0]);
+  }
+
+  function getTimeTravelClass(writtenAt, forDate) {
+    const wd = (writtenAt + '').slice(0, 10);
+    if (wd < forDate) return 'past';
+    if (wd > forDate) return 'future';
+    return 'present';
+  }
+
+  function getTimeTravelBadge(cls) {
+    if (cls === 'past')    return '🕰️ from the past';
+    if (cls === 'future')  return '✨ from the future';
+    return '📅 on this day';
+  }
+
+  // ── State ──
+  let currentDate = today();
+  let eventSource = null;
+  let postCount = 0;
+
+  // ── Date navigation ──
+  function shiftDate(delta) {
+    const [y, m, d] = currentDate.split('-').map(Number);
+    const nd = new Date(y, m - 1, d + delta);
+    const yy = nd.getFullYear();
+    const mm = String(nd.getMonth() + 1).padStart(2, '0');
+    const dd = String(nd.getDate()).padStart(2, '0');
+    const target = `${yy}-${mm}-${dd}`;
+    if (target > today()) return;
+    loadDate(target);
+  }
+
+  function updateNavButtons() {
+    const fwdBtn = document.querySelector('.date-nav button:nth-child(3)');
+    if (fwdBtn) fwdBtn.disabled = currentDate >= today();
+  }
+
+  function goToday() {
+    loadDate(today());
+  }
+
+  // ── Load a date ──
+  async function loadDate(dateStr) {
+    currentDate = dateStr;
+    updateNavButtons();
+    document.getElementById('dateDisplay').textContent = fmtDate(dateStr);
+    document.getElementById('feedTitle').textContent = fmtDate(dateStr);
+    document.getElementById('feedCount').textContent = '';
+
+    // close existing SSE
+    if (eventSource) { eventSource.close(); eventSource = null; }
+
+    // show skeleton
+    document.getElementById('feed').innerHTML = `
+      <div class="post-card">
+        <div class="skeleton" style="width:85%"></div>
+        <div class="skeleton" style="width:65%"></div>
+        <div class="skeleton" style="width:45%"></div>
+      </div>`;
+
+    // fetch existing posts
+    const res = await fetch(`/feed/${dateStr}`);
+    const posts = await res.json();
+    renderFeed(posts, dateStr);
+
+    // open SSE for live updates
+    eventSource = new EventSource(`/stream/${dateStr}`);
+    eventSource.onmessage = (e) => {
+      const post = JSON.parse(e.data);
+      prependPost(post, dateStr);
+      postCount++;
+      document.getElementById('feedCount').textContent = `${postCount} post${postCount !== 1 ? 's' : ''}`;
+      refreshDateList();
+    };
+
+    // highlight active date in sidebar
+    document.querySelectorAll('.date-item').forEach(el => {
+      el.classList.toggle('active', el.dataset.date === dateStr);
+    });
+  }
+
+  // ── Render full feed ──
+  function renderFeed(posts, forDate) {
+    const feed = document.getElementById('feed');
+    postCount = posts.length;
+    document.getElementById('feedCount').textContent = `${postCount} post${postCount !== 1 ? 's' : ''}`;
+
+    if (posts.length === 0) {
+      feed.innerHTML = `
+        <div class="empty-state">
+          <div class="big">🌌</div>
+          No posts for this date yet.<br/>Be the first — or wait for someone from the future.
+        </div>`;
+      return;
+    }
+
+    feed.innerHTML = '';
+    posts.forEach(p => appendPost(p, forDate, feed));
+  }
+
+  function makeCard(post, forDate) {
+    const cls = getTimeTravelClass(post.written_at, forDate);
+    const badge = getTimeTravelBadge(cls);
+    const card = document.createElement('div');
+    card.className = `post-card ${cls}`;
+    card.innerHTML = `
+      <div class="post-content">${escHtml(post.content)}</div>
+      <div class="post-meta">
+        <div>
+          <span class="post-author">${escHtml(post.author)}</span>
+          <span class="post-time"> · ${fmtWritten(post.written_at)}</span>
+        </div>
+        <span class="badge ${cls}">${badge}</span>
+      </div>`;
+    return card;
+  }
+
+  function appendPost(post, forDate, container) {
+    container.appendChild(makeCard(post, forDate));
+  }
+
+  function prependPost(post, forDate) {
+    const feed = document.getElementById('feed');
+    const empty = feed.querySelector('.empty-state');
+    if (empty) feed.innerHTML = '';
+    feed.prepend(makeCard(post, forDate));
+  }
+
+  // ── Post form ──
+  document.getElementById('content').addEventListener('input', function() {
+    document.getElementById('charCount').textContent = `${this.value.length} / 500`;
+  });
+
+  async function submitPost() {
+    const author  = document.getElementById('author').value.trim() || 'anon';
+    const content = document.getElementById('content').value.trim();
+    const flash   = document.getElementById('flash');
+    const btn     = document.getElementById('postBtn');
+
+    if (!content) {
+      flash.className = 'flash err';
+      flash.textContent = 'Write something first.';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Posting…';
+
+    const res = await fetch('/post', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ author, content, for_date: currentDate }),
+    });
+
+    btn.disabled = false;
+    btn.textContent = 'Post';
+
+    if (res.ok) {
+      document.getElementById('content').value = '';
+      document.getElementById('charCount').textContent = '0 / 500';
+      flash.className = 'flash ok';
+      flash.textContent = 'Posted.';
+      setTimeout(() => flash.className = 'flash', 2500);
+      refreshDateList();
+    } else {
+      flash.className = 'flash err';
+      flash.textContent = 'Something went wrong.';
+    }
+  }
+
+  // ── Active dates sidebar ──
+  async function refreshDateList() {
+    const res = await fetch('/dates');
+    const dates = await res.json();
+    const list = document.getElementById('dateList');
+
+    if (dates.length === 0) {
+      list.innerHTML = '<div class="date-item">No posts yet.</div>';
+      return;
+    }
+
+    list.innerHTML = dates.map(d => `
+      <div class="date-item ${d.for_date === currentDate ? 'active' : ''}"
+           data-date="${d.for_date}"
+           onclick="loadDate('${d.for_date}')">
+        <span>${fmtDate(d.for_date)}</span>
+        <span class="count">${d.count}</span>
+      </div>
+    `).join('');
+  }
+
+  function escHtml(str) {
+    return str
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/\n/g,'<br/>');
+  }
+
+  // ── Boot ──
+  loadDate(today());
+  refreshDateList();
+</script>
+</body>
+</html>
