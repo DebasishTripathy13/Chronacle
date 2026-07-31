@@ -1,4 +1,8 @@
 <p align="center">
+  <img src="static/banner-chronacle.png" alt="Chronacle" width="100%">
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/Chronacle-TimeBoard-7c3aed?style=for-the-badge&labelColor=08080f" alt="Chronacle — TimeBoard"/>
 </p>
 
@@ -159,46 +163,22 @@ The badge tells you **what the writer knew** at the moment they wrote. If they w
 
 ### System Overview
 
-```
-┌───────────────────────────────────────────────────────┐
-│                     CLIENT (Browser)                  │
-│                                                       │
-│   ┌─────────────┐    ┌──────────────────────────┐     │
-│   │  home.html   │    │      index.html (Board)  │     │
-│   │  Landing     │───▶│  Date nav · Post form    │     │
-│   │  Page        │    │  Live feed · SSE stream  │     │
-│   └─────────────┘    └──────────────────────────┘     │
-└────────────────────────────┬──────────────────────────┘
-                             │ HTTP / SSE
-                             ▼
-┌───────────────────────────────────────────────────────┐
-│                   FastAPI Server (oracle.py)           │
-│                                                       │
-│   GET  /          → Landing page (home.html)          │
-│   GET  /board     → TimeBoard UI (index.html)         │
-│   POST /post      → Create a post for a date          │
-│   GET  /feed/{d}  → Fetch all posts for date d        │
-│   GET  /stream/{d}→ SSE: real-time post stream        │
-│   GET  /dates     → Active dates with post counts     │
-│                                                       │
-│   ┌───────────────────────────────────────────┐       │
-│   │  In-Memory Subscriber Registry            │       │
-│   │  date_string → [asyncio.Queue, ...]       │       │
-│   │  (powers real-time SSE fan-out)           │       │
-│   └───────────────────────────────────────────┘       │
-└────────────────────────────┬──────────────────────────┘
-                             │
-                             ▼
-┌───────────────────────────────────────────────────────┐
-│                  SQLite Database (oracle.db)           │
-│                                                       │
-│   posts                                               │
-│   ├── id          INTEGER PRIMARY KEY AUTOINCREMENT   │
-│   ├── content     TEXT NOT NULL                        │
-│   ├── author      TEXT NOT NULL DEFAULT 'anon'        │
-│   ├── for_date    DATE NOT NULL (indexed)             │
-│   └── written_at  DATETIME NOT NULL                   │
-└───────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    Home["home.html\nLanding page"] --> Board["index.html\nDate nav · post form · live SSE feed"]
+    Board -->|HTTP / SSE| API
+
+    subgraph API["FastAPI Server (oracle.py)"]
+        R1["GET /  → landing page"]
+        R2["GET /board  → TimeBoard UI"]
+        R3["POST /post  → create a post"]
+        R4["GET /feed/{d}  → posts for date d"]
+        R5["GET /stream/{d}  → SSE live feed"]
+        R6["GET /dates  → active dates + counts"]
+        Reg["In-memory subscriber registry\ndate → [asyncio.Queue, ...]"]
+    end
+
+    API --> DB[("SQLite: oracle.db\nposts(id, content, author, for_date, written_at)")]
 ```
 
 ### Request Flow — Posting a Message
@@ -419,7 +399,7 @@ Every post is a small act of temporal empathy: reaching backward through time to
 
 ## License
 
-This project is open source. Built with curiosity and a quiet respect for the arrow of time.
+MIT — see [LICENSE](LICENSE). Built with curiosity and a quiet respect for the arrow of time.
 
 ---
 
